@@ -1,0 +1,15 @@
+services:
+
+  image-hosting-with-forwarded-auth:
+    
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: build
+    container_name: image-hosting-with-forwarded-auth
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/app
+    env_file:
+      - dev.env

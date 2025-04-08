@@ -1,0 +1,29 @@
+{
+  "name": "image-hosting-with-forwarded-auth",
+  "dockerComposeFile": ["../docker-compose.yaml"],
+  "service": "image-hosting-with-forwarded-auth",
+  "workspaceFolder": "/app",
+  "remoteUser": "root",
+  "overrideCommand": true,
+  "mounts": [
+    "source=${env:HOME}/.ssh,target=/root/.ssh,type=bind"
+  ],
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "configureZshAsDefaultShell": true
+    },
+    "ghcr.io/devcontainers-contrib/features/zsh-plugins:0": {
+      "omzPlugins": "https://github.com/zsh-users/zsh-autosuggestions https://github.com/zsh-users/zsh-syntax-highlighting https://github.com/zsh-users/zsh-completions https://github.com/zsh-users/zsh-history-substring-search",
+      "plugins": "zsh-autosuggestions zsh-syntax-highlighting zsh-completions zsh-history-substring-search"
+    }
+  },
+  "customizations": {
+    // Configure properties specific to VS Code.
+    "vscode": {
+      // Add the IDs of extensions you want installed when the container is created.
+      "extensions": [
+        "golang.go"
+      ]
+    }
+  }
+}

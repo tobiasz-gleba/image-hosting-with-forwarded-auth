@@ -1,0 +1,8 @@
+.devcontainer/devcontainer.json
+.gitignore
+.vscode/**
+Dockerfile
+docker-compose.yml
+README.md
+license.txt
+dev.env
