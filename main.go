@@ -10,20 +10,6 @@ import (
 	"strings"
 )
 
-func main() {
-	authServerBaseURL := os.Getenv("AUTH_SERVER_BASE_URL")
-	if authServerBaseURL == "" {
-		authServerBaseURL = "http://localhost:8081/auth" // default fallback
-	}
-
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		authForwardingHandler(w, r, authServerBaseURL)
-	})
-
-	log.Println("Server running on http://localhost")
-	log.Fatal(http.ListenAndServe(":80", nil))
-}
-
 func authForwardingHandler(w http.ResponseWriter, r *http.Request, authServerBaseURL string) {
 	// Build the full auth URL: base + original path and query
 	authURL, err := url.Parse(authServerBaseURL)
@@ -34,7 +20,7 @@ func authForwardingHandler(w http.ResponseWriter, r *http.Request, authServerBas
 	authURL.Path += r.URL.Path
 	authURL.RawQuery = r.URL.RawQuery
 
-	// Create the forwarded request
+	// // Create the forwarded request
 	req, err := http.NewRequest("GET", authURL.String(), nil)
 	if err != nil {
 		http.Error(w, "Failed to create auth request", http.StatusInternalServerError)
@@ -49,6 +35,7 @@ func authForwardingHandler(w http.ResponseWriter, r *http.Request, authServerBas
 		return
 	}
 	defer resp.Body.Close()
+	println(resp.StatusCode)
 
 	if resp.StatusCode != http.StatusOK {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -56,25 +43,41 @@ func authForwardingHandler(w http.ResponseWriter, r *http.Request, authServerBas
 	}
 
 	// Serve image from the request path
-	imageVariants := []string{".png", ".jpg", ".jpeg"}
+	staticDir := os.Getenv("STATIC_DIR")
+	if staticDir == "" {
+		staticDir = "/app/static" // default fallback
+	}
 	basePath := strings.TrimPrefix(r.URL.Path, "/")
-	for _, ext := range imageVariants {
-		fileName := basePath + ext
-		file, err := os.Open(fileName)
-		if err == nil {
-			defer file.Close()
+	fileName := filepath.Join(staticDir, basePath)
+	file, err := os.Open(fileName)
+	if err == nil {
+		defer file.Close()
 
-			switch strings.ToLower(filepath.Ext(fileName)) {
-			case ".png":
-				w.Header().Set("Content-Type", "image/png")
-			case ".jpg", ".jpeg":
-				w.Header().Set("Content-Type", "image/jpeg")
-			}
-
-			io.Copy(w, file)
-			return
+		switch strings.ToLower(filepath.Ext(fileName)) {
+		case ".png":
+			w.Header().Set("Content-Type", "image/png")
+		case ".jpg", ".jpeg":
+			w.Header().Set("Content-Type", "image/jpeg")
 		}
+
+		io.Copy(w, file)
+		return
 	}
 
 	http.Error(w, "Image not found", http.StatusInternalServerError)
+}
+
+func main() {
+	authServerBaseURL := os.Getenv("AUTH_SERVER_BASE_URL")
+	if authServerBaseURL == "" {
+		authServerBaseURL = "https://agentix.pl" // default fallback
+	}
+	println("Using auth server base URL:", authServerBaseURL)
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		authForwardingHandler(w, r, authServerBaseURL)
+	})
+
+	log.Println("Server running on http://localhost:8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }

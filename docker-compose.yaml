@@ -8,7 +8,7 @@ services:
       target: build
     container_name: image-hosting-with-forwarded-auth
     ports:
-      - "8080:80"
+      - "8080:8080"
     volumes:
       - ./:/app
     env_file:

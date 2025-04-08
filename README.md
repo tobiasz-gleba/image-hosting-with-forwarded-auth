@@ -20,18 +20,18 @@
 ```bash
 docker run -p 8080:8080 \
 -e AUTH_SERVER_BASE_URL="http://your-auth-server.local/auth" \
--v $(pwd)/images:/app \
-ghcr.io/your-username/auth-forwarding-image-server
+-v $(pwd)/images:/app/static \
+ghcr.io/tobiasz-gleba/image-hosting-with-forwarded-auth
 ```
 
 Now you can:
 ```http
-GET http://localhost:8080/cats/image1
+GET http://localhost:8080/cats/image1.jpg
 ```
 
 And it will:
-- Forward request to: `http://your-auth-server.local/auth/cats/image1`
-- If 200 OK → return `cats/image1.png` or `.jpg` or `.jpeg` (in that order)
+- Forward request to: `http://your-auth-server.local/auth/cats/image1.jpg`
+- If 200 OK → return `cats/image1.png` or `.jpg` or `.jpeg`
 - If not → return 401 Unauthorized
 
 ---
@@ -40,16 +40,8 @@ And it will:
 
 ```env
 AUTH_SERVER_BASE_URL=http://localhost:8081/auth
+STATIC_DIR=/app/static
 ```
-
----
-
-### 📁 File Matching Behavior
-
-When you request `/example/path`, it will try to serve (in order):
-- `example/path.png`
-- `example/path.jpg`
-- `example/path.jpeg`
 
 ---
 
