@@ -2,6 +2,7 @@ package main
 
 import (
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -31,13 +32,18 @@ func authForwardingHandler(w http.ResponseWriter, r *http.Request, authServerBas
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
+		log.Printf("Auth server error for request %s: %v", r.URL.Path, err)
 		http.Error(w, "Auth server error", http.StatusBadGateway)
 		return
 	}
 	defer resp.Body.Close()
-	println(resp.StatusCode)
+
+	// Read response body for logging purposes
+	respBody, _ := ioutil.ReadAll(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
+		log.Printf("Unauthorized access attempt for image: %s", r.URL.Path)
+		log.Printf("Auth server response: Status=%d, Body=%s", resp.StatusCode, string(respBody))
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
@@ -64,6 +70,7 @@ func authForwardingHandler(w http.ResponseWriter, r *http.Request, authServerBas
 		return
 	}
 
+	log.Printf("Image not found: %s", fileName)
 	http.Error(w, "Image not found", http.StatusInternalServerError)
 }
 
@@ -72,7 +79,7 @@ func main() {
 	if authServerBaseURL == "" {
 		authServerBaseURL = "https://agentix.pl" // default fallback
 	}
-	println("Using auth server base URL:", authServerBaseURL)
+	log.Printf("Using auth server base URL: %s", authServerBaseURL)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		authForwardingHandler(w, r, authServerBaseURL)
